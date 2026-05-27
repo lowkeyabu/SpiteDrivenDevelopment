@@ -3,6 +3,7 @@ local GameSession = require("src.game.game_session")
 local KanbanView = require("src.ui.components.kanban_view")
 local PlayerHUD = require("src.ui.components.player_hud")
 local RNG = require("src.util.rng")
+local SabotageMenu = require("src.ui.components.sabotage_menu")
 local typography = require("src.ui.typography")
 
 local M = {}
@@ -41,10 +42,18 @@ local function build_layout(self, w, h)
   local fsm = self.fsm
   local kanban = self.kanban
 
+  self.sabotage_menu = SabotageMenu.new({
+    game_session = gs,
+    kanban = kanban,
+    on_close = function()
+      if gs.ended then fsm:transition("end_screen") end
+    end,
+  })
+
   local function selected() return kanban:get_selected() end
 
   local btn_w, btn_h = 110, 40
-  local total = 7 * btn_w + 6 * 8
+  local total = 8 * btn_w + 7 * 8
   local bar_y = h - BUTTON_BAR_H + (BUTTON_BAR_H - btn_h) / 2
   local bx = (w - total) / 2
 
@@ -108,6 +117,12 @@ local function build_layout(self, w, h)
     return t and t.column == "review"
        and t.owner ~= gs.current_actor
        and actor_has_ap()
+  end)
+
+  add("Sabotage", function()
+    self.sabotage_menu:open(love.graphics.getWidth(), love.graphics.getHeight())
+  end, function()
+    return actor_has_ap()
   end)
 
   add("End Turn", function()
@@ -214,14 +229,24 @@ function M:draw()
       end)
     end
   end
+
+  self.sabotage_menu:draw()
 end
 
 function M:mousemoved(x, y)
+  if self.sabotage_menu.visible then
+    self.sabotage_menu:mousemoved(x, y)
+    return
+  end
   self.kanban:mousemoved(x, y)
   for _, b in ipairs(self.action_buttons) do b:mousemoved(x, y) end
 end
 
 function M:mousepressed(x, y, btn)
+  if self.sabotage_menu.visible then
+    self.sabotage_menu:mousepressed(x, y, btn)
+    return
+  end
   self.kanban:mousepressed(x, y, btn)
   for _, b in ipairs(self.action_buttons) do
     local enabled = b._predicate == nil or b._predicate()
@@ -230,11 +255,19 @@ function M:mousepressed(x, y, btn)
 end
 
 function M:mousereleased(x, y, btn)
+  if self.sabotage_menu.visible then
+    self.sabotage_menu:mousereleased(x, y, btn)
+    return
+  end
   self.kanban:mousereleased(x, y, btn)
   for _, b in ipairs(self.action_buttons) do b:mousereleased(x, y, btn) end
 end
 
 function M:keypressed(key)
+  if self.sabotage_menu.visible then
+    self.sabotage_menu:keypressed(key)
+    return
+  end
   if key == "escape" then
     self.fsm:transition("menu")
   end
