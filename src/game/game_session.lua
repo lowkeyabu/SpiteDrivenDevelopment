@@ -24,6 +24,7 @@ local function init_players(session)
   for i, p in ipairs(session.players) do
     local rec = { idx = i, name = p.name, color = p.color, ap = ap }
     for k, v in pairs(INITIAL_STATS) do rec[k] = v end
+    rec.humble_brag_log = {}
     table.insert(players, rec)
   end
   return players
@@ -54,6 +55,7 @@ local function new(opts)
     sprint_number = 1,
     sprint_phase = "planning",
     sprint_turn_count = 0,
+    dilemmas_drawn = {},
     ended = false,
     end_reason = nil,
   }, GameSession)
@@ -141,6 +143,13 @@ function GameSession:submit_for_review(id)
   assert(t, "no such ticket in in_progress: " .. tostring(id))
   t:submit_for_review()
   table.insert(self.review, t)
+  spend_ap(self)
+end
+
+function GameSession:do_meeting()
+  require_turns_phase(self); require_ap(self)
+  self.players[self.current_actor].clout =
+    self.players[self.current_actor].clout + 2
   spend_ap(self)
 end
 
