@@ -1,0 +1,113 @@
+local TextInput = require("src.ui.components.text_input")
+
+describe("TextInput", function()
+  it("starts at the provided value", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "hello" })
+    assert.is_equal("hello", t:get_value())
+  end)
+
+  it("defaults: value='', max_length=24, focused=false", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32 })
+    assert.is_equal("", t:get_value())
+    assert.is_false(t.focused)
+  end)
+
+  it("clicking inside focuses the widget", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32 })
+    t:mousepressed(50, 16, 1)
+    assert.is_true(t.focused)
+  end)
+
+  it("clicking outside defocuses the widget", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "hi" })
+    t:mousepressed(50, 16, 1)
+    assert.is_true(t.focused)
+    t:mousepressed(999, 999, 1)
+    assert.is_false(t.focused)
+  end)
+
+  it("textinput appends only when focused", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "" })
+    t:textinput("a")
+    assert.is_equal("", t:get_value())
+    t:mousepressed(50, 16, 1)
+    t:textinput("a")
+    t:textinput("b")
+    assert.is_equal("ab", t:get_value())
+  end)
+
+  it("textinput respects max_length", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "", max_length = 3 })
+    t:mousepressed(50, 16, 1)
+    t:textinput("a"); t:textinput("b"); t:textinput("c"); t:textinput("d")
+    assert.is_equal("abc", t:get_value())
+  end)
+
+  it("backspace removes the last character when focused", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "hello" })
+    t:mousepressed(50, 16, 1)
+    t:keypressed("backspace")
+    assert.is_equal("hell", t:get_value())
+    t:keypressed("backspace")
+    t:keypressed("backspace")
+    t:keypressed("backspace")
+    t:keypressed("backspace")
+    assert.is_equal("", t:get_value())
+    t:keypressed("backspace")
+    assert.is_equal("", t:get_value())
+  end)
+
+  it("backspace ignored when not focused", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, value = "hello" })
+    t:keypressed("backspace")
+    assert.is_equal("hello", t:get_value())
+  end)
+
+  it("return and escape defocus the widget", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32 })
+    t:mousepressed(50, 16, 1)
+    assert.is_true(t.focused)
+    t:keypressed("return")
+    assert.is_false(t.focused)
+    t:mousepressed(50, 16, 1)
+    assert.is_true(t.focused)
+    t:keypressed("escape")
+    assert.is_false(t.focused)
+  end)
+
+  it("on_change fires when value changes (textinput and backspace), not on focus changes", function()
+    local last
+    local fires = 0
+    local t = TextInput.new({
+      x = 0, y = 0, w = 240, h = 32, value = "",
+      on_change = function(v) last = v; fires = fires + 1 end,
+    })
+    t:mousepressed(50, 16, 1)
+    assert.is_equal(0, fires)
+    t:textinput("a")
+    assert.is_equal("a", last); assert.is_equal(1, fires)
+    t:keypressed("backspace")
+    assert.is_equal("", last); assert.is_equal(2, fires)
+    t:keypressed("return")
+    assert.is_equal(2, fires)
+  end)
+
+  it("set_value updates and fires on_change only on actual change", function()
+    local last
+    local t = TextInput.new({
+      x = 0, y = 0, w = 240, h = 32, value = "hi",
+      on_change = function(v) last = v end,
+    })
+    t:set_value("hi")
+    assert.is_nil(last)
+    t:set_value("bye")
+    assert.is_equal("bye", last)
+    assert.is_equal("bye", t:get_value())
+  end)
+
+  it("set_value truncates to max_length", function()
+    local t = TextInput.new({ x = 0, y = 0, w = 240, h = 32, max_length = 3 })
+    t:set_value("abcdef")
+    assert.is_equal("abc", t:get_value())
+  end)
+end)
