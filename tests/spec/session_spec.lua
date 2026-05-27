@@ -150,4 +150,22 @@ describe("Session", function()
     assert.is_equal("fixed_n_sprints_5", s.config.end_trigger)
     assert.has_error(function() s:set_config("end_trigger", "bogus") end)
   end)
+
+  it("exposes TITLES catalog from IC1 to C-suite", function()
+    local titles = Session.TITLES
+    assert.is_table(titles)
+    assert.is_equal("IC1", titles[1])
+    assert.is_equal("C-suite", titles[#titles])
+    assert.is_equal(10, #titles)
+  end)
+
+  it("next_title returns the next rung up; nil at C-suite", function()
+    assert.is_equal("IC2", Session.next_title("IC1"))
+    assert.is_equal("C-suite", Session.next_title(Session.TITLES[#Session.TITLES - 1]))
+    assert.is_nil(Session.next_title("C-suite"))
+  end)
+
+  it("next_title raises on unknown title", function()
+    assert.has_error(function() Session.next_title("InventedTitle") end)
+  end)
 end)

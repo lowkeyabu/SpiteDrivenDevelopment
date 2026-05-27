@@ -42,6 +42,23 @@ Session.PLAYER_PALETTE = {
   { 0.95, 0.55, 0.75 }, -- pink
 }
 
+-- Career ladder, IC1 → C-suite. Promotions advance one rung per sprint
+-- (top shipper). Reaching C-suite triggers the "first_to_csuite_or_..."
+-- end trigger.
+Session.TITLES = {
+  "IC1", "IC2", "Senior", "Staff", "Principal",
+  "Manager", "Sr Manager", "Director", "VP", "C-suite",
+}
+
+local function next_title(current)
+  for i, t in ipairs(Session.TITLES) do
+    if t == current then
+      return Session.TITLES[i + 1]
+    end
+  end
+  error("unknown title: " .. tostring(current))
+end
+
 local MAX_NAME = 20
 
 local function defaults()
@@ -131,4 +148,6 @@ return {
   MODES = Session.MODES,
   END_TRIGGERS = Session.END_TRIGGERS,
   PLAYER_PALETTE = Session.PLAYER_PALETTE,
+  TITLES = Session.TITLES,
+  next_title = next_title,
 }
