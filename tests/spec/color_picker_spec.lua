@@ -76,4 +76,10 @@ describe("ColorPicker", function()
     c:mousereleased(90, 16, 2)
     assert.is_equal(1, c:get_value())
   end)
+
+  it("width() reports the total horizontal footprint", function()
+    local c = fixture()
+    -- 4 swatches of 32px + 3 gaps of 8px = 128 + 24 = 152
+    assert.is_equal(152, c:width())
+  end)
 end)

@@ -41,8 +41,6 @@ function Stepper:set_value(v)
   if clamped ~= self.value then
     self.value = clamped
     self.on_change(self.value)
-  else
-    self.value = clamped
   end
 end
 
