@@ -1,6 +1,7 @@
 local Button = require("src.ui.components.button")
 local GameSession = require("src.game.game_session")
 local KanbanView = require("src.ui.components.kanban_view")
+local PlayerHUD = require("src.ui.components.player_hud")
 local RNG = require("src.util.rng")
 local typography = require("src.ui.typography")
 
@@ -9,6 +10,8 @@ M.__index = M
 
 local BUTTON_BAR_H = 80
 local TOP_BAR_H = 48
+local HUD_W = 260
+local HUD_GAP = 16
 
 local function action_button(label, x, y, w, h, on_click)
   return Button.new({
@@ -20,9 +23,18 @@ end
 
 local function build_layout(self, w, h)
   local gs = self.game_session
-  self.kanban = KanbanView.new({
+
+  self.hud = PlayerHUD.new({
     x = 16, y = TOP_BAR_H + 8,
-    w = w - 32, h = h - TOP_BAR_H - BUTTON_BAR_H - 16,
+    w = HUD_W,
+    game_session = gs,
+  })
+
+  local kanban_x = 16 + HUD_W + HUD_GAP
+  self.kanban = KanbanView.new({
+    x = kanban_x, y = TOP_BAR_H + 8,
+    w = w - kanban_x - 16,
+    h = h - TOP_BAR_H - BUTTON_BAR_H - 16,
     game_session = gs,
   })
 
@@ -31,8 +43,8 @@ local function build_layout(self, w, h)
 
   local function selected() return kanban:get_selected() end
 
-  local btn_w, btn_h = 120, 40
-  local total = 6 * btn_w + 5 * 8
+  local btn_w, btn_h = 110, 40
+  local total = 7 * btn_w + 6 * 8
   local bar_y = h - BUTTON_BAR_H + (BUTTON_BAR_H - btn_h) / 2
   local bx = (w - total) / 2
 
@@ -40,38 +52,67 @@ local function build_layout(self, w, h)
 
   local function add(label, on_click, predicate)
     local b = action_button(label, bx, bar_y, btn_w, btn_h, function()
-      local t = selected()
-      if not t then return end
-      if predicate and not predicate(t) then return end
-      on_click(t)
+      if predicate and not predicate() then return end
+      on_click()
     end)
     b._predicate = predicate
     table.insert(self.action_buttons, b)
     bx = bx + btn_w + 8
   end
 
-  add("Claim", function(t) gs:claim(t.id) end,
-    function(t) return t.column == "backlog" end)
+  local function actor_has_ap()
+    return gs.players[gs.current_actor].ap > 0
+  end
 
-  add("Work", function(t) gs:work(t.id) end,
-    function(t)
-      return t.column == "in_progress"
-         and t.owner == gs.current_actor
-         and t.points_remaining > 0
-    end)
+  add("Claim", function()
+    local t = selected(); if t then gs:claim(t.id) end
+  end, function()
+    local t = selected()
+    return t and t.column == "backlog" and actor_has_ap()
+  end)
 
-  add("Submit", function(t) gs:submit_for_review(t.id) end,
-    function(t)
-      return t.column == "in_progress"
-         and t.owner == gs.current_actor
-         and t.points_remaining == 0
-    end)
+  add("Work", function()
+    local t = selected(); if t then gs:work(t.id) end
+  end, function()
+    local t = selected()
+    return t and t.column == "in_progress"
+       and t.owner == gs.current_actor
+       and t.points_remaining > 0
+       and actor_has_ap()
+  end)
 
-  add("Approve", function(t) gs:approve(t.id) end,
-    function(t) return t.column == "review" end)
+  add("Submit", function()
+    local t = selected(); if t then gs:submit_for_review(t.id) end
+  end, function()
+    local t = selected()
+    return t and t.column == "in_progress"
+       and t.owner == gs.current_actor
+       and t.points_remaining == 0
+       and actor_has_ap()
+  end)
 
-  add("Reject", function(t) gs:reject(t.id) end,
-    function(t) return t.column == "review" end)
+  add("Approve", function()
+    local t = selected(); if t then gs:approve(t.id) end
+  end, function()
+    local t = selected()
+    return t and t.column == "review"
+       and t.owner ~= gs.current_actor
+       and actor_has_ap()
+  end)
+
+  add("Reject", function()
+    local t = selected(); if t then gs:reject(t.id) end
+  end, function()
+    local t = selected()
+    return t and t.column == "review"
+       and t.owner ~= gs.current_actor
+       and actor_has_ap()
+  end)
+
+  add("End Turn", function()
+    gs:end_turn()
+    kanban.selected_id = nil
+  end, function() return true end)
 
   add("End Game", function() fsm:transition("end_screen") end,
     function() return true end)
@@ -125,15 +166,15 @@ function M:draw()
     local company = self.session.config.company_name
     love.graphics.print(company, 16, (TOP_BAR_H - font:getHeight()) / 2)
 
-    local p1 = self.game_session.players[1]
-    local right = string.format("Shipped: %d  /  Credit: %d  /  %s",
-      self.game_session:shipped_count(),
-      p1.credit,
-      p1.name)
+    local gs = self.game_session
+    local actor = gs.players[gs.current_actor]
+    local right = string.format("Turn %d  /  Shipped: %d  /  %s's turn",
+      gs.turn_count, gs:shipped_count(), actor.name)
     local rw = font:getWidth(right)
     love.graphics.print(right, w - rw - 16, (TOP_BAR_H - font:getHeight()) / 2)
   end)
 
+  self.hud:draw()
   self.kanban:draw()
 
   love.graphics.setColor(0.92, 0.90, 0.82)
@@ -142,9 +183,7 @@ function M:draw()
   love.graphics.line(0, h - BUTTON_BAR_H, w, h - BUTTON_BAR_H)
 
   for _, b in ipairs(self.action_buttons) do
-    local selected_t = self.kanban:get_selected()
-    local enabled = b._predicate == nil
-      or (selected_t and b._predicate(selected_t))
+    local enabled = b._predicate == nil or b._predicate()
     if enabled then
       b:draw()
     else
@@ -174,9 +213,7 @@ end
 function M:mousepressed(x, y, btn)
   self.kanban:mousepressed(x, y, btn)
   for _, b in ipairs(self.action_buttons) do
-    local selected_t = self.kanban:get_selected()
-    local enabled = b._predicate == nil
-      or (selected_t and b._predicate(selected_t))
+    local enabled = b._predicate == nil or b._predicate()
     if enabled then b:mousepressed(x, y, btn) end
   end
 end
