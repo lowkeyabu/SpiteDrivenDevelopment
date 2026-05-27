@@ -10,6 +10,8 @@ Session.__index = Session
 Session.MODES = {
   { id = "sprint", label = "The Sprint",  available = true,
     blurb = "Shared JIRA Kanban. Ticket cards flow Backlog → Done. v1." },
+  { id = "sprint_tutorial", label = "Tutorial — Sprint", available = true,
+    blurb = "Learn the Sprint mode with a guided walkthrough." },
   { id = "floor", label = "The Floor",  available = false,
     blurb = "Monopoly-style office loop with desk rent. Coming later." },
   { id = "ladder", label = "The Ladder", available = false,
@@ -70,6 +72,7 @@ local function defaults()
     comp_target = 30,
     turn_cap = 8,
     tier_gating = true,
+    tutorial_mode = false,
   }
 end
 
@@ -107,7 +110,7 @@ function Session:set_config(key, value)
 end
 
 function Session:set_player_count(n)
-  assert(n >= 2 and n <= 8, "player_count must be in [2, 8], got " .. tostring(n))
+  assert(n >= 1 and n <= 8, "player_count must be in [1, 8], got " .. tostring(n))
   while #self.players < n do
     local i = #self.players + 1
     table.insert(self.players, {

@@ -100,9 +100,9 @@ describe("Session", function()
     assert.is_equal("Player 5", s.players[5].name)
   end)
 
-  it("set_player_count rejects values outside [2, 8]", function()
+  it("set_player_count rejects values outside [1, 8]", function()
     local s = Session.new()
-    assert.has_error(function() s:set_player_count(1) end)
+    assert.has_no.errors(function() s:set_player_count(1) end)
     assert.has_error(function() s:set_player_count(9) end)
     assert.has_error(function() s:set_player_count(0) end)
   end)
@@ -167,5 +167,17 @@ describe("Session", function()
 
   it("next_title raises on unknown title", function()
     assert.has_error(function() Session.next_title("InventedTitle") end)
+  end)
+
+  it("MODES includes sprint_tutorial as available", function()
+    local by_id = {}
+    for _, m in ipairs(Session.MODES) do by_id[m.id] = m end
+    assert.is_not_nil(by_id.sprint_tutorial)
+    assert.is_true(by_id.sprint_tutorial.available)
+  end)
+
+  it("config defaults tutorial_mode to false", function()
+    local s = Session.new()
+    assert.is_false(s.config.tutorial_mode)
   end)
 end)

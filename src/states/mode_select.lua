@@ -26,7 +26,14 @@ local function build_layout(self, w, h)
         font_size = "lg",
         on_click = function()
           session:set_mode(mode.id)
-          fsm:transition("config")
+          if mode.id == "sprint_tutorial" then
+            session.config.tutorial_mode = true
+            session:set_player_count(1)
+            session:set_player_name(1, "You")
+            fsm:transition("game")
+          else
+            fsm:transition("config")
+          end
         end,
       }))
     else
