@@ -25,6 +25,9 @@ local function init_players(session)
     local rec = { idx = i, name = p.name, color = p.color, ap = ap }
     for k, v in pairs(INITIAL_STATS) do rec[k] = v end
     rec.humble_brag_log = {}
+    rec.archetype_counters = { saboteur = 0, ladder_climber = 0, snitch = 0,
+                                credit_thief = 0, debt_dumper = 0, meeting_farmer = 0 }
+    rec.capstone_done = false
     table.insert(players, rec)
   end
   return players
@@ -150,6 +153,8 @@ function GameSession:do_meeting()
   require_turns_phase(self); require_ap(self)
   self.players[self.current_actor].clout =
     self.players[self.current_actor].clout + 2
+  self.players[self.current_actor].archetype_counters.meeting_farmer =
+    (self.players[self.current_actor].archetype_counters.meeting_farmer or 0) + 1
   spend_ap(self)
 end
 

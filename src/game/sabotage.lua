@@ -55,6 +55,26 @@ function Sabotage.play(gs, card_id, target)
     "insufficient clout for " .. card.id .. " (need " .. card.clout .. ", have " .. actor.clout .. ")")
   actor.clout = actor.clout - card.clout
   actor.linkedin_score = actor.linkedin_score + card.ls_delta
+  actor.archetype_counters.saboteur =
+    (actor.archetype_counters.saboteur or 0) + 1
+  local tier3_plus = { pip = true, reorg = true, skip_level = true,
+                       fire = true, rto_mandate = true, pivot_ai = true }
+  if tier3_plus[card.id] then
+    actor.archetype_counters.ladder_climber =
+      (actor.archetype_counters.ladder_climber or 0) + 1
+  end
+  if card.id == "slack_dm_manager" then
+    actor.archetype_counters.snitch =
+      (actor.archetype_counters.snitch or 0) + 1
+  end
+  if card.id == "credit_steal" then
+    actor.archetype_counters.credit_thief =
+      (actor.archetype_counters.credit_thief or 0) + 1
+  end
+  if card.id == "legacy_auth" then
+    actor.archetype_counters.debt_dumper =
+      (actor.archetype_counters.debt_dumper or 0) + 1
+  end
   card.effect(gs, actor_idx, target or {})
 end
 
