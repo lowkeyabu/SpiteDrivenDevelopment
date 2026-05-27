@@ -20,8 +20,18 @@ local function lua_generator(seed)
   }
 end
 
+local _default_seed_counter = 0
+
+local function default_seed()
+  _default_seed_counter = (_default_seed_counter + 1) % 2147483647
+  -- Mix wall time (seconds), process time (sub-second), and a per-call counter.
+  local wall = os.time()
+  local proc = math.floor((os.clock() % 1) * 1e6)
+  return (wall * 1000003 + proc * 1009 + _default_seed_counter) % 2147483647
+end
+
 local function new(seed)
-  seed = seed or os.time()
+  seed = seed or default_seed()
   local backend
   if has_love then
     backend = love.math.newRandomGenerator(seed)

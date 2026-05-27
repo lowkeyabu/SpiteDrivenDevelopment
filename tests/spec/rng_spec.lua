@@ -46,4 +46,14 @@ describe("RNG", function()
     table.sort(out)
     assert.are.same(input, out)
   end)
+
+  it("default-seeded RNGs constructed back-to-back produce different sequences", function()
+    local a = RNG.new()
+    local b = RNG.new()
+    local same = true
+    for _ = 1, 32 do
+      if a:random() ~= b:random() then same = false; break end
+    end
+    assert.is_false(same)
+  end)
 end)
