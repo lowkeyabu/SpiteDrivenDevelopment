@@ -39,9 +39,12 @@ function FSM:start(name)
   local state = self.states[name]
   assert(state, "no such state: " .. tostring(name))
   self._transitioning = true
-  self.current_name = name
-  if state.enter then state:enter() end
+  local ok, err = pcall(function()
+    self.current_name = name
+    if state.enter then state:enter() end
+  end)
   self._transitioning = false
+  if not ok then error(err, 0) end
 end
 
 function FSM:transition(name)
@@ -49,11 +52,14 @@ function FSM:transition(name)
   local next_state = self.states[name]
   assert(next_state, "no such state: " .. tostring(name))
   self._transitioning = true
-  local prev = self.states[self.current_name]
-  if prev and prev.leave then prev:leave() end
-  self.current_name = name
-  if next_state.enter then next_state:enter() end
+  local ok, err = pcall(function()
+    local prev = self.states[self.current_name]
+    if prev and prev.leave then prev:leave() end
+    self.current_name = name
+    if next_state.enter then next_state:enter() end
+  end)
   self._transitioning = false
+  if not ok then error(err, 0) end
 end
 
 function FSM:current()
