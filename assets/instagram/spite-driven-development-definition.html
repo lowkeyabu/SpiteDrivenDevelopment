@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>spite-driven development — definition (IG 1:1)</title>
+  <style>
+    :root {
+      --paper: #f7efdc;
+      --ink: #1a1a1a;
+      --rule: #1a1a1a;
+      --muted: #4a4a4a;
+      --faint: #777;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #2a2a28;
+      font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: 1080px;
+      height: 1080px;
+      max-width: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 96px 96px 80px 96px;
+      box-sizing: border-box;
+      position: relative;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+      background-image:
+        radial-gradient(rgba(26,26,26,0.025) 1px, transparent 1px),
+        radial-gradient(rgba(26,26,26,0.018) 1px, transparent 1px);
+      background-size: 3px 3px, 7px 7px;
+      background-position: 0 0, 1px 1px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 28px; left: 28px; right: 28px;
+      border-top: 1px solid var(--rule);
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      bottom: 28px; left: 28px; right: 28px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .corner-tag {
+      position: absolute;
+      top: 44px;
+      right: 54px;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--faint);
+      text-transform: uppercase;
+      font-style: italic;
+    }
+
+    .headword {
+      font-size: 108px;
+      line-height: 1.02;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -2px;
+      padding-right: 240px; /* keep clear of sketch */
+    }
+    .headword .dot {
+      color: var(--faint);
+      font-weight: 400;
+      margin: 0 1px;
+    }
+    .headword .line2 {
+      display: block;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: baseline;
+      gap: 26px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .pos {
+      font-size: 28px;
+      font-style: italic;
+      color: var(--muted);
+    }
+    .pron {
+      font-size: 28px;
+      color: var(--muted);
+    }
+
+    .rule {
+      border-top: 2px solid var(--rule);
+      margin: 36px 0 38px;
+    }
+    .rule-thin {
+      border-top: 1px solid var(--rule);
+      margin: 44px 0 32px;
+    }
+
+    .senses {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .sense {
+      font-size: 32px;
+      line-height: 1.5;
+      display: flex;
+      gap: 18px;
+    }
+    .sense .num {
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 32px;
+      padding-top: 2px;
+    }
+    .sense em {
+      font-style: italic;
+    }
+
+    .etym {
+      font-size: 20px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .etym b {
+      font-weight: 700;
+      font-style: normal;
+      letter-spacing: 0.5px;
+    }
+    .etym .crosslink {
+      font-variant: small-caps;
+      font-weight: 700;
+      font-style: normal;
+      letter-spacing: 0.5px;
+    }
+
+    .sketch {
+      position: absolute;
+      top: 108px;
+      right: 104px;
+      width: 210px;
+      height: 190px;
+      opacity: 0.92;
+    }
+
+    .credit {
+      position: absolute;
+      left: 56px;
+      bottom: 46px;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--faint);
+      text-transform: uppercase;
+      font-style: italic;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="corner-tag">Fig. I · entry 1 of 1</div>
+
+    <svg class="sketch" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#1a1a1a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <!-- desk -->
+      <line x1="30" y1="140" x2="170" y2="140"/>
+      <line x1="45" y1="140" x2="45" y2="165"/>
+      <line x1="155" y1="140" x2="155" y2="165"/>
+      <!-- stick figure seated -->
+      <circle cx="100" cy="72" r="13"/>
+      <line x1="100" y1="85" x2="100" y2="120"/>
+      <!-- arms -->
+      <line x1="100" y1="100" x2="75" y2="118"/>
+      <line x1="100" y1="100" x2="125" y2="118"/>
+      <!-- legs under desk -->
+      <line x1="100" y1="120" x2="85" y2="140"/>
+      <line x1="100" y1="120" x2="115" y2="140"/>
+      <!-- two branching arrows representing a dilemma -->
+      <path d="M 100 50 Q 70 25 45 30"/>
+      <polygon points="48,26 40,30 48,34" fill="#1a1a1a" stroke="none"/>
+      <path d="M 100 50 Q 130 25 155 30"/>
+      <polygon points="152,26 160,30 152,34" fill="#1a1a1a" stroke="none"/>
+      <!-- A / B labels -->
+      <text x="35" y="22" font-family="Iowan Old Style, Palatino Linotype, Georgia, serif" font-size="16" font-weight="700" fill="#1a1a1a" stroke="none">A</text>
+      <text x="155" y="22" font-family="Iowan Old Style, Palatino Linotype, Georgia, serif" font-size="16" font-weight="700" fill="#1a1a1a" stroke="none">B</text>
+      <!-- question mark over head -->
+      <text x="93" y="40" font-family="Iowan Old Style, Palatino Linotype, Georgia, serif" font-size="20" font-weight="700" fill="#1a1a1a" stroke="none">?</text>
+    </svg>
+
+    <h1 class="headword">spite<span class="dot">·</span>driv<span class="dot">·</span>en<span class="line2">de<span class="dot">·</span>vel<span class="dot">·</span>op<span class="dot">·</span>ment</span></h1>
+
+    <div class="meta-row">
+      <span class="pos">noun</span>
+      <span class="pron">/ˈspaɪt ˌdrɪv·ən dɪˈvɛl·əp·mənt/</span>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="senses">
+      <div class="sense">
+        <span class="num">1</span>
+        <div>a boardgame in which you climb MegaCorp's JIRA board by poaching reports, ghosting reviews, and answering dilemmas like <em>"layoff 5 juniors or 1 senior?"</em></div>
+      </div>
+      <div class="sense">
+        <span class="num">2</span>
+        <div>winner gets the corner office. everyone gets a receipt for their ethics.</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="rule-thin"></div>
+
+    <div class="etym">
+      [etym. <b>sprint</b> + <i>pure malice</i>. &nbsp; See also <span class="crosslink">agile</span>, <span class="crosslink">RTO</span>, <span class="crosslink">vibes-check</span>.]
+    </div>
+
+    <div class="credit">Spite Driven Development · forthcoming</div>
+  </div>
+</body>
+</html>
