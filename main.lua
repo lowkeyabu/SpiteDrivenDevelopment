@@ -1,7 +1,9 @@
 local FSM = require("src.util.fsm")
+local Session = require("src.game.session")
 local typography = require("src.ui.typography")
 
 local fsm
+local session
 
 local STATES = {
   "menu",
@@ -17,10 +19,12 @@ function love.load()
   typography.init()
 
   fsm = FSM.new()
+  session = Session.new()
+  local deps = { fsm = fsm, session = session }
+
   for _, name in ipairs(STATES) do
     local mod = require("src.states." .. name)
-    mod.fsm = fsm
-    fsm:register(name, mod)
+    fsm:register(name, mod.new(deps))
   end
   fsm:start("menu")
 end
