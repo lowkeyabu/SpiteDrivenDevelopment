@@ -2,17 +2,19 @@ local Button = require("src.ui.components.button")
 local typography = require("src.ui.typography")
 
 local M = {}
+M.__index = M
 
 local function build_buttons(self, w, h)
   local btn_w, btn_h = 320, 56
   local cx = (w - btn_w) / 2
   local cy = h / 2 + 20
 
+  local fsm = self.fsm
   self.buttons = {
     Button.new({
       x = cx, y = cy, w = btn_w, h = btn_h,
       label = "New Game",
-      on_click = function() self.fsm:transition("mode_select") end,
+      on_click = function() fsm:transition("mode_select") end,
     }),
     Button.new({
       x = cx, y = cy + btn_h + 16, w = btn_w, h = btn_h,
@@ -20,6 +22,13 @@ local function build_buttons(self, w, h)
       on_click = function() love.event.quit() end,
     }),
   }
+end
+
+local function new(deps)
+  return setmetatable({
+    fsm = deps.fsm,
+    session = deps.session,
+  }, M)
 end
 
 function M:enter()
@@ -33,7 +42,6 @@ end
 function M:draw()
   local w, h = love.graphics.getWidth(), love.graphics.getHeight()
 
-  -- Title
   typography.with("display", function()
     love.graphics.setColor(0.1, 0.1, 0.1)
     local font = love.graphics.getFont()
@@ -42,7 +50,6 @@ function M:draw()
     love.graphics.print(title, (w - tw) / 2, h / 4)
   end)
 
-  -- Subtitle
   typography.with("md", function()
     love.graphics.setColor(0.3, 0.3, 0.3)
     local font = love.graphics.getFont()
@@ -74,4 +81,6 @@ function M:keypressed(key)
   end
 end
 
-return M
+return {
+  new = new,
+}

@@ -63,4 +63,27 @@ describe("FSM", function()
     fsm:start("a")
     assert.has_error(function() fsm:transition("missing") end)
   end)
+
+  it("raises if a state's enter or leave calls transition on the same fsm", function()
+    local fsm = FSM.new()
+    fsm:register("a", {
+      enter = function(self)
+        fsm:transition("b")
+      end,
+    })
+    fsm:register("b", {})
+    assert.has_error(function() fsm:start("a") end)
+  end)
+
+  it("clears the transition flag when a state's enter raises", function()
+    local fsm = FSM.new()
+    fsm:register("a", {
+      enter = function() error("boom") end,
+    })
+    fsm:register("b", { enter = function(self) self.entered = true end })
+    pcall(function() fsm:start("a") end)
+    -- After the raise, the fsm must not be wedged. Starting b should succeed.
+    assert.has_no.errors(function() fsm:start("b") end)
+    assert.is_equal("b", fsm:current())
+  end)
 end)

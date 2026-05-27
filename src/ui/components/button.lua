@@ -1,8 +1,6 @@
--- Rectangular button with paper-card styling. Hit detection and click handling
--- are pure logic (testable with busted). Rendering uses love.graphics and is
--- verified manually.
-
-local typography_ok, typography = pcall(require, "src.ui.typography")
+-- Rectangular button with paper-card styling. Hit detection and click
+-- handling are pure logic (testable with busted). Rendering uses
+-- love.graphics and is verified manually.
 
 local Button = {}
 Button.__index = Button
@@ -16,6 +14,7 @@ local function new(opts)
     w = opts.w or 120,
     h = opts.h or 40,
     label = opts.label or "",
+    font_size = opts.font_size or "md",
     on_click = opts.on_click or noop,
     hover = false,
     pressed = false,
@@ -29,12 +28,6 @@ function Button:hit(px, py)
      and py < self.y + self.h
 end
 
-function Button:click(px, py)
-  if self:hit(px, py) then
-    self.on_click()
-  end
-end
-
 function Button:mousemoved(x, y)
   self.hover = self:hit(x, y)
 end
@@ -46,15 +39,16 @@ function Button:mousepressed(x, y, btn)
 end
 
 function Button:mousereleased(x, y, btn)
-  if btn == 1 then
-    if self.pressed and self:hit(x, y) then
-      self.on_click()
-    end
-    self.pressed = false
+  if btn ~= 1 then return end
+  if self.pressed and self:hit(x, y) then
+    self.on_click()
   end
+  self.pressed = false
 end
 
 function Button:draw()
+  if not (love and love.graphics) then return end
+
   -- Paper card with a 1px dark border. Hover lightens the fill; pressed darkens.
   local fill_r, fill_g, fill_b = 1, 1, 1
   if self.pressed then
@@ -70,17 +64,16 @@ function Button:draw()
   love.graphics.rectangle("line", self.x, self.y, self.w, self.h)
 
   -- Label
-  if typography_ok then
-    typography.with("md", function()
-      love.graphics.setColor(0.1, 0.1, 0.1)
-      local font = love.graphics.getFont()
-      local tw = font:getWidth(self.label)
-      local th = font:getHeight()
-      love.graphics.print(self.label,
-        self.x + (self.w - tw) / 2,
-        self.y + (self.h - th) / 2)
-    end)
-  end
+  local typography = require("src.ui.typography")
+  typography.with(self.font_size, function()
+    love.graphics.setColor(0.1, 0.1, 0.1)
+    local font = love.graphics.getFont()
+    local tw = font:getWidth(self.label)
+    local th = font:getHeight()
+    love.graphics.print(self.label,
+      self.x + (self.w - tw) / 2,
+      self.y + (self.h - th) / 2)
+  end)
 end
 
 return {

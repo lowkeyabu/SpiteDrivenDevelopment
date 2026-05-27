@@ -14,34 +14,74 @@ describe("Button", function()
     assert.is_false(b:hit(120, 30))
     assert.is_false(b:hit(50, 5))
     assert.is_false(b:hit(50, 80))
-    assert.is_false(b:hit(110, 60))         -- one past bottom-right
+    assert.is_false(b:hit(110, 60))          -- one past bottom-right
   end)
 
-  it("invokes the click handler when clicked inside", function()
+  it("press-then-release inside fires the click handler", function()
     local clicked = false
     local b = Button.new({
       x = 0, y = 0, w = 50, h = 50,
-      label = "ok",
       on_click = function() clicked = true end,
     })
-    b:click(10, 10)
+    b:mousepressed(10, 10, 1)
+    b:mousereleased(10, 10, 1)
     assert.is_true(clicked)
   end)
 
-  it("does not invoke the handler when clicked outside", function()
+  it("press inside then release outside does not fire", function()
     local clicked = false
     local b = Button.new({
       x = 0, y = 0, w = 50, h = 50,
-      label = "ok",
       on_click = function() clicked = true end,
     })
-    b:click(99, 99)
+    b:mousepressed(10, 10, 1)
+    b:mousereleased(99, 99, 1)
     assert.is_false(clicked)
   end)
 
-  it("defaults label to an empty string and on_click to a no-op", function()
+  it("press outside then release inside does not fire", function()
+    local clicked = false
+    local b = Button.new({
+      x = 0, y = 0, w = 50, h = 50,
+      on_click = function() clicked = true end,
+    })
+    b:mousepressed(99, 99, 1)
+    b:mousereleased(10, 10, 1)
+    assert.is_false(clicked)
+  end)
+
+  it("non-primary mouse buttons do not fire on_click", function()
+    local clicked = false
+    local b = Button.new({
+      x = 0, y = 0, w = 50, h = 50,
+      on_click = function() clicked = true end,
+    })
+    b:mousepressed(10, 10, 2)
+    b:mousereleased(10, 10, 2)
+    assert.is_false(clicked)
+  end)
+
+  it("defaults label to an empty string, on_click to a no-op, font_size to 'md'", function()
     local b = Button.new({ x = 0, y = 0, w = 10, h = 10 })
     assert.is_equal("", b.label)
-    assert.has_no.errors(function() b:click(5, 5) end)
+    assert.is_equal("md", b.font_size)
+    assert.has_no.errors(function()
+      b:mousepressed(5, 5, 1)
+      b:mousereleased(5, 5, 1)
+    end)
+  end)
+
+  it("accepts a font_size override via constructor", function()
+    local b = Button.new({ x = 0, y = 0, w = 10, h = 10, font_size = "lg" })
+    assert.is_equal("lg", b.font_size)
+  end)
+
+  it("mousemoved updates the hover flag", function()
+    local b = Button.new({ x = 0, y = 0, w = 50, h = 50 })
+    assert.is_false(b.hover)
+    b:mousemoved(10, 10)
+    assert.is_true(b.hover)
+    b:mousemoved(99, 99)
+    assert.is_false(b.hover)
   end)
 end)

@@ -1,4 +1,12 @@
 local M = {}
+M.__index = M
+
+local function new(deps)
+  return setmetatable({
+    fsm = deps.fsm,
+    session = deps.session,
+  }, M)
+end
 
 function M:enter()
   self.message = "GAME — press SPACE to advance to end_screen"
@@ -17,4 +25,6 @@ function M:keypressed(key)
   end
 end
 
-return M
+return {
+  new = new,
+}
