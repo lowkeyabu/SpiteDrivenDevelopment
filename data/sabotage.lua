@@ -170,4 +170,102 @@ return {
       gs.in_progress = kept
     end,
   },
+  -- Plan 10 expansion: 8 more cards (2 per tier) using existing effect patterns.
+  {
+    id = "scope_creep",
+    name = '"Quick question — can we also..."',
+    tier = 1, clout = 1, ls_delta = 1,
+    target = "player",
+    flavor = "Target loses 1 AP on next turn (scope creep ate it).",
+    effect = function(gs, actor_idx, target)
+      local p = gs.players[target.player_idx]
+      p.ap = math.max(0, p.ap - 1)
+    end,
+  },
+  {
+    id = "calendar_bomb",
+    name = '"Putting time on your calendar."',
+    tier = 1, clout = 2, ls_delta = 1,
+    target = "player",
+    flavor = "Target loses 1 AP next turn. You +1 Clout (relationship building).",
+    effect = function(gs, actor_idx, target)
+      local p = gs.players[target.player_idx]
+      p.ap = math.max(0, p.ap - 1)
+      gs.players[actor_idx].clout = gs.players[actor_idx].clout + 1
+    end,
+  },
+  {
+    id = "ooo_lunch",
+    name = '"Stepping out for a long lunch."',
+    tier = 2, clout = 2, ls_delta = 2,
+    target = "all",
+    flavor = "All other players lose 1 AP. You +1 Clout.",
+    effect = function(gs, actor_idx, target)
+      for i, p in ipairs(gs.players) do
+        if i ~= actor_idx then p.ap = math.max(0, p.ap - 1) end
+      end
+      gs.players[actor_idx].clout = gs.players[actor_idx].clout + 1
+    end,
+  },
+  {
+    id = "fake_oncall",
+    name = '"Sorry, on-call paging me."',
+    tier = 2, clout = 3, ls_delta = 2,
+    target = "none",
+    flavor = "You skip the rest of this turn but gain 3 Clout (incident response).",
+    effect = function(gs, actor_idx, target)
+      local p = gs.players[actor_idx]
+      p.clout = p.clout + 3
+      p.ap = 0
+    end,
+  },
+  {
+    id = "calibration_leak",
+    name = '"Heard about your calibration."',
+    tier = 3, clout = 5, ls_delta = 3,
+    target = "player",
+    flavor = "Drain 2 Clout from target. You +1 Clout.",
+    effect = function(gs, actor_idx, target)
+      local p = gs.players[target.player_idx]
+      local amount = math.min(2, p.clout)
+      p.clout = p.clout - amount
+      gs.players[actor_idx].clout = gs.players[actor_idx].clout + 1
+    end,
+  },
+  {
+    id = "weekend_oncall_assign",
+    name = '"You\'re on-call this weekend."',
+    tier = 3, clout = 4, ls_delta = 3,
+    target = "player",
+    flavor = "Target loses 2 AP next turn.",
+    effect = function(gs, actor_idx, target)
+      local p = gs.players[target.player_idx]
+      p.ap = math.max(0, p.ap - 2)
+    end,
+  },
+  {
+    id = "promotion_freeze",
+    name = '"Promotion freeze this cycle."',
+    tier = 4, clout = 8, ls_delta = 5,
+    target = "all",
+    flavor = "All other players' titles are frozen for this sprint.",
+    effect = function(gs, actor_idx, target)
+      for i, p in ipairs(gs.players) do
+        if i ~= actor_idx then p.title_frozen = true end
+      end
+    end,
+  },
+  {
+    id = "acquisition_rumor",
+    name = '"Heard we\'re being acquired."',
+    tier = 4, clout = 7, ls_delta = 4,
+    target = "all",
+    flavor = "Every other player loses half their Clout (rounded down). You +2 Clout.",
+    effect = function(gs, actor_idx, target)
+      for i, p in ipairs(gs.players) do
+        if i ~= actor_idx then p.clout = math.floor(p.clout / 2) end
+      end
+      gs.players[actor_idx].clout = gs.players[actor_idx].clout + 2
+    end,
+  },
 }

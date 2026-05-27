@@ -26,9 +26,9 @@ local function fresh()
 end
 
 describe("Sabotage", function()
-  it("loads the 12 seed cards", function()
+  it("loads the 20 seed cards", function()
     local cards = Sabotage.all()
-    assert.is_equal(12, #cards)
+    assert.is_equal(20, #cards)
     for _, c in ipairs(cards) do
       assert.is_string(c.id)
       assert.is_string(c.name)
@@ -54,7 +54,7 @@ describe("Sabotage", function()
     local g = fresh()
     g.session.config.tier_gating = false
     local avail = Sabotage.available_for(g)
-    assert.is_equal(12, #avail)
+    assert.is_equal(20, #avail)
   end)
 
   it("can_afford checks Clout balance", function()
