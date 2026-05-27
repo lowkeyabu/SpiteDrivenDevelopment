@@ -26,9 +26,9 @@ local function fresh()
 end
 
 describe("Capstones", function()
-  it("loads one card per archetype (6 total)", function()
+  it("loads 2 cards per archetype (12 total)", function()
     local cards = Capstones.all()
-    assert.is_equal(6, #cards)
+    assert.is_equal(12, #cards)
     local by_arch = {}
     for _, c in ipairs(cards) do by_arch[c.archetype] = c end
     assert.is_not_nil(by_arch.ladder_climber)

@@ -34,8 +34,24 @@ function Capstones.classify(player)
   return best
 end
 
+local function find_all_for(archetype)
+  local out = {}
+  for _, c in ipairs(cards) do
+    if c.archetype == archetype then table.insert(out, c) end
+  end
+  return out
+end
+
 function Capstones.draw_for(archetype, rng)
-  return find_for(archetype) or find_for("clean_operator")
+  local pool = find_all_for(archetype)
+  if #pool == 0 then pool = find_all_for("clean_operator") end
+  if #pool == 0 then return nil end
+  if #pool == 1 then return pool[1] end
+  if rng then
+    local idx = rng:random(1, #pool)
+    return pool[idx]
+  end
+  return pool[1]
 end
 
 function Capstones.resolve(gs, player_idx, capstone, choice)
