@@ -6,6 +6,14 @@
 local Ticket = {}
 Ticket.__index = Ticket
 
+local function copy_modifiers(src)
+  local out = {}
+  if src then
+    for k, v in pairs(src) do out[k] = v end
+  end
+  return out
+end
+
 local function new(opts)
   return setmetatable({
     id = opts.id,
@@ -13,7 +21,7 @@ local function new(opts)
     type = opts.type or "feature",
     points = opts.points or 1,
     reward = opts.reward or 1,
-    modifiers = opts.modifiers or {},
+    modifiers = copy_modifiers(opts.modifiers),
     hidden_trait = opts.hidden_trait,
     column = "backlog",
     points_remaining = opts.points or 1,

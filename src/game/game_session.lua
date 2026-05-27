@@ -107,6 +107,12 @@ function GameSession:approve(ticket_id)
   t:approve(self.current_actor)
   local owner = self.players[t.owner]
   owner.credit = owner.credit + t.reward
+  -- Spec §6.2: reviewer gains +1 Credit. Skipped when reviewer is also
+  -- the owner (Plan 4 single-actor mode), to avoid double-credit.
+  if self.current_actor ~= t.owner then
+    local reviewer = self.players[self.current_actor]
+    reviewer.credit = reviewer.credit + 1
+  end
   table.insert(self.done, t)
 end
 

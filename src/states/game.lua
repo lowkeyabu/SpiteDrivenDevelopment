@@ -104,7 +104,9 @@ function M:enter()
 end
 
 function M:resize(w, h)
+  local prev_selected = self.kanban and self.kanban.selected_id
   build_layout(self, w, h)
+  if prev_selected then self.kanban.selected_id = prev_selected end
 end
 
 function M:draw()
