@@ -54,6 +54,7 @@ local function build_layout(self, w, h)
     local b = action_button(label, bx, bar_y, btn_w, btn_h, function()
       if predicate and not predicate() then return end
       on_click()
+      if gs.ended then fsm:transition("end_screen") end
     end)
     b._predicate = predicate
     table.insert(self.action_buttons, b)
@@ -112,6 +113,12 @@ local function build_layout(self, w, h)
   add("End Turn", function()
     gs:end_turn()
     kanban.selected_id = nil
+    while gs.sprint_phase == "retro" do
+      gs:advance_phase()
+    end
+    if gs.ended then
+      fsm:transition("end_screen")
+    end
   end, function() return true end)
 
   add("End Game", function() fsm:transition("end_screen") end,
@@ -141,6 +148,10 @@ function M:enter()
     })
     self.session:attach_game_session(self.game_session)
   end
+  -- Start the first sprint (or resume mid-sprint if re-entering).
+  if self.game_session.sprint_phase == "planning" then
+    self.game_session:advance_phase()
+  end
   build_layout(self, love.graphics.getWidth(), love.graphics.getHeight())
 end
 
@@ -168,8 +179,8 @@ function M:draw()
 
     local gs = self.game_session
     local actor = gs.players[gs.current_actor]
-    local right = string.format("Turn %d  /  Shipped: %d  /  %s's turn",
-      gs.turn_count, gs:shipped_count(), actor.name)
+    local right = string.format("Sprint %d  /  Turn %d  /  Shipped: %d  /  %s's turn",
+      gs.sprint_number, gs.turn_count, gs:shipped_count(), actor.name)
     local rw = font:getWidth(right)
     love.graphics.print(right, w - rw - 16, (TOP_BAR_H - font:getHeight()) / 2)
   end)
