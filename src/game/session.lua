@@ -118,6 +118,14 @@ function Session:set_player_color(i, color_idx)
   self.players[i].color = color_idx
 end
 
+function Session:attach_game_session(gs)
+  self._game_session = gs
+end
+
+function Session:get_game_session()
+  return self._game_session
+end
+
 return {
   new = new,
   MODES = Session.MODES,

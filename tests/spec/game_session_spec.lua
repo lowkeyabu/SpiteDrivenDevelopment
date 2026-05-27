@@ -1,0 +1,136 @@
+local GameSession = require("src.game.game_session")
+local RNG = require("src.util.rng")
+local Session = require("src.game.session")
+local Ticket = require("src.game.ticket")
+
+local function ticket_defs()
+  return {
+    { id = "T1", title = "first",  type = "feature", points = 1, reward = 1 },
+    { id = "T2", title = "second", type = "feature", points = 2, reward = 2 },
+    { id = "T3", title = "third",  type = "chore",   points = 3, reward = 3 },
+  }
+end
+
+local function fresh()
+  local s = Session.new()
+  s:set_mode("sprint")
+  s:set_player_count(2)
+  return GameSession.new({
+    session = s,
+    ticket_defs = ticket_defs(),
+    rng = RNG.new(123),
+  })
+end
+
+describe("GameSession", function()
+  it("populates the backlog from the ticket defs and seeds per-player stats", function()
+    local g = fresh()
+    assert.is_equal(3, #g.backlog)
+    assert.is_equal(0, #g.in_progress)
+    assert.is_equal(0, #g.review)
+    assert.is_equal(0, #g.done)
+    assert.is_equal(2, #g.players)
+    for _, p in ipairs(g.players) do
+      assert.is_equal(0, p.credit)
+      assert.is_equal(0, p.clout)
+      assert.is_equal(0, p.tech_debt)
+      assert.is_equal(0, p.linkedin_score)
+      assert.is_equal("IC1", p.title)
+    end
+  end)
+
+  it("current_actor defaults to player 1 (Plan 4 single-player)", function()
+    local g = fresh()
+    assert.is_equal(1, g.current_actor)
+  end)
+end)
+
+describe("GameSession (focused)", function()
+  it("claim removes the ticket from backlog and pushes it onto in_progress", function()
+    local g = fresh()
+    local t1 = g.backlog[1]
+    g:claim(t1.id)
+    assert.is_equal(2, #g.backlog)
+    assert.is_equal(1, #g.in_progress)
+    assert.is_equal(t1.id, g.in_progress[1].id)
+    assert.is_equal("in_progress", g.in_progress[1].column)
+    assert.is_equal(1, g.in_progress[1].owner)
+  end)
+
+  it("claim raises when the id is not in the backlog", function()
+    local g = fresh()
+    assert.has_error(function() g:claim("MISSING") end)
+  end)
+
+  it("work decrements points_remaining on a ticket the actor owns", function()
+    local g = fresh()
+    g:claim("T2")
+    g:work("T2")
+    assert.is_equal(1, g.in_progress[1].points_remaining)
+    g:work("T2")
+    assert.is_equal(0, g.in_progress[1].points_remaining)
+  end)
+
+  it("work raises when the ticket is not owned by the actor", function()
+    local g = fresh()
+    g:claim("T1")
+    g.current_actor = 2
+    assert.has_error(function() g:work("T1") end)
+  end)
+
+  it("submit_for_review moves a 0-point in_progress ticket to review", function()
+    local g = fresh()
+    g:claim("T1")
+    g:work("T1")
+    g:submit_for_review("T1")
+    assert.is_equal(0, #g.in_progress)
+    assert.is_equal(1, #g.review)
+    assert.is_equal("T1", g.review[1].id)
+  end)
+
+  it("approve moves a review ticket to done and credits the owner", function()
+    local g = fresh()
+    g:claim("T2")
+    g:work("T2"); g:work("T2")
+    g:submit_for_review("T2")
+    g:approve("T2")
+    assert.is_equal(0, #g.review)
+    assert.is_equal(1, #g.done)
+    assert.is_equal("T2", g.done[1].id)
+    assert.is_equal(2, g.players[1].credit)
+  end)
+
+  it("reject sends the ticket back to in_progress with points reset", function()
+    local g = fresh()
+    g:claim("T2")
+    g:work("T2"); g:work("T2")
+    g:submit_for_review("T2")
+    g:reject("T2")
+    assert.is_equal(0, #g.review)
+    assert.is_equal(1, #g.in_progress)
+    assert.is_equal("T2", g.in_progress[1].id)
+    assert.is_equal(2, g.in_progress[1].points_remaining)
+  end)
+
+  it("find finds a ticket by id across all columns", function()
+    local g = fresh()
+    local t = g:find("T3")
+    assert.is_not_nil(t)
+    assert.is_equal("T3", t.id)
+    g:claim("T3")
+    t = g:find("T3")
+    assert.is_equal("in_progress", t.column)
+  end)
+
+  it("returns nil when finding an unknown id", function()
+    local g = fresh()
+    assert.is_nil(g:find("MISSING"))
+  end)
+
+  it("shipped_count returns the number of tickets in done", function()
+    local g = fresh()
+    assert.is_equal(0, g:shipped_count())
+    g:claim("T1"); g:work("T1"); g:submit_for_review("T1"); g:approve("T1")
+    assert.is_equal(1, g:shipped_count())
+  end)
+end)
