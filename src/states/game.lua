@@ -4,6 +4,8 @@ local KanbanView = require("src.ui.components.kanban_view")
 local PlayerHUD = require("src.ui.components.player_hud")
 local RNG = require("src.util.rng")
 local SabotageMenu = require("src.ui.components.sabotage_menu")
+local DilemmaDialog = require("src.ui.components.dilemma_dialog")
+local Dilemmas = require("src.game.dilemmas")
 local typography = require("src.ui.typography")
 
 local M = {}
@@ -50,10 +52,17 @@ local function build_layout(self, w, h)
     end,
   })
 
+  self.dilemma_dialog = DilemmaDialog.new({
+    on_choose = function(dilemma, choice)
+      Dilemmas.resolve(gs, dilemma, choice)
+      if gs.ended then fsm:transition("end_screen") end
+    end,
+  })
+
   local function selected() return kanban:get_selected() end
 
   local btn_w, btn_h = 110, 40
-  local total = 8 * btn_w + 7 * 8
+  local total = 9 * btn_w + 8 * 8
   local bar_y = h - BUTTON_BAR_H + (BUTTON_BAR_H - btn_h) / 2
   local bx = (w - total) / 2
 
@@ -117,6 +126,16 @@ local function build_layout(self, w, h)
     return t and t.column == "review"
        and t.owner ~= gs.current_actor
        and actor_has_ap()
+  end)
+
+  add("Meeting", function()
+    gs:do_meeting()
+    local card = Dilemmas.draw(gs.rng, gs.dilemmas_drawn)
+    if card then
+      self.dilemma_dialog:open(card, love.graphics.getWidth(), love.graphics.getHeight())
+    end
+  end, function()
+    return actor_has_ap()
   end)
 
   add("Sabotage", function()
@@ -231,9 +250,14 @@ function M:draw()
   end
 
   self.sabotage_menu:draw()
+  self.dilemma_dialog:draw()
 end
 
 function M:mousemoved(x, y)
+  if self.dilemma_dialog.visible then
+    self.dilemma_dialog:mousemoved(x, y)
+    return
+  end
   if self.sabotage_menu.visible then
     self.sabotage_menu:mousemoved(x, y)
     return
@@ -243,6 +267,10 @@ function M:mousemoved(x, y)
 end
 
 function M:mousepressed(x, y, btn)
+  if self.dilemma_dialog.visible then
+    self.dilemma_dialog:mousepressed(x, y, btn)
+    return
+  end
   if self.sabotage_menu.visible then
     self.sabotage_menu:mousepressed(x, y, btn)
     return
@@ -255,6 +283,10 @@ function M:mousepressed(x, y, btn)
 end
 
 function M:mousereleased(x, y, btn)
+  if self.dilemma_dialog.visible then
+    self.dilemma_dialog:mousereleased(x, y, btn)
+    return
+  end
   if self.sabotage_menu.visible then
     self.sabotage_menu:mousereleased(x, y, btn)
     return
@@ -264,6 +296,10 @@ function M:mousereleased(x, y, btn)
 end
 
 function M:keypressed(key)
+  if self.dilemma_dialog.visible then
+    self.dilemma_dialog:keypressed(key)
+    return
+  end
   if self.sabotage_menu.visible then
     self.sabotage_menu:keypressed(key)
     return
