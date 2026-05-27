@@ -26,8 +26,8 @@ local function fresh()
 end
 
 describe("Dilemmas", function()
-  it("loads 6 seed cards", function()
-    assert.is_equal(6, #Dilemmas.all())
+  it("loads 15 seed cards", function()
+    assert.is_equal(15, #Dilemmas.all())
   end)
 
   it("each card has the required shape", function()
