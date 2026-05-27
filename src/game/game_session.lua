@@ -162,7 +162,9 @@ function GameSession:approve(id)
   require_turns_phase(self); require_ap(self)
   local t = find_in(self.review, id)
   assert(t, "no such ticket in review: " .. tostring(id))
-  assert(self.current_actor ~= t.owner, "actor cannot approve own ticket")
+  if not self.session.config.tutorial_mode then
+    assert(self.current_actor ~= t.owner, "actor cannot approve own ticket")
+  end
   remove_by_id(self.review, id)
   t:approve(self.current_actor)
   local owner = self.players[t.owner]
@@ -179,7 +181,9 @@ function GameSession:reject(id)
   require_turns_phase(self); require_ap(self)
   local t = find_in(self.review, id)
   assert(t, "no such ticket in review: " .. tostring(id))
-  assert(self.current_actor ~= t.owner, "actor cannot reject own ticket")
+  if not self.session.config.tutorial_mode then
+    assert(self.current_actor ~= t.owner, "actor cannot reject own ticket")
+  end
   remove_by_id(self.review, id)
   t:reject()
   table.insert(self.in_progress, t)

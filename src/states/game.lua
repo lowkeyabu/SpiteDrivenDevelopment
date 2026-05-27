@@ -6,6 +6,8 @@ local RNG = require("src.util.rng")
 local SabotageMenu = require("src.ui.components.sabotage_menu")
 local DilemmaDialog = require("src.ui.components.dilemma_dialog")
 local Dilemmas = require("src.game.dilemmas")
+local Tutorial = require("src.game.tutorial")
+local TutorialOverlay = require("src.ui.components.tutorial_overlay")
 local typography = require("src.ui.typography")
 
 local M = {}
@@ -48,6 +50,7 @@ local function build_layout(self, w, h)
     game_session = gs,
     kanban = kanban,
     on_close = function()
+      if self.tutorial then self.tutorial.sabotage_closed = true end
       if gs.ended then fsm:transition("end_screen") end
     end,
   })
@@ -55,6 +58,7 @@ local function build_layout(self, w, h)
   self.dilemma_dialog = DilemmaDialog.new({
     on_choose = function(dilemma, choice)
       Dilemmas.resolve(gs, dilemma, choice)
+      if self.tutorial then self.tutorial.dilemma_resolved = true end
       if gs.ended then fsm:transition("end_screen") end
     end,
   })
@@ -134,6 +138,7 @@ local function build_layout(self, w, h)
     if card then
       self.dilemma_dialog:open(card, love.graphics.getWidth(), love.graphics.getHeight())
     end
+    if self.tutorial then self.tutorial.meeting_done = true end
   end, function()
     return actor_has_ap()
   end)
@@ -150,6 +155,7 @@ local function build_layout(self, w, h)
     while gs.sprint_phase == "retro" do
       gs:advance_phase()
     end
+    if self.tutorial then self.tutorial.end_turn_done = true end
     if gs.ended then
       fsm:transition("end_screen")
     end
@@ -182,9 +188,15 @@ function M:enter()
     })
     self.session:attach_game_session(self.game_session)
   end
-  -- Start the first sprint (or resume mid-sprint if re-entering).
   if self.game_session.sprint_phase == "planning" then
     self.game_session:advance_phase()
+  end
+  if self.session.config.tutorial_mode then
+    self.tutorial = Tutorial.new()
+    self.tutorial_overlay = TutorialOverlay.new({ state = self.tutorial })
+    -- Generous AP so the user doesn't get stuck.
+    self.session.config.ap_per_turn = 5
+    for _, p in ipairs(self.game_session.players) do p.ap = 5 end
   end
   build_layout(self, love.graphics.getWidth(), love.graphics.getHeight())
 end
@@ -251,6 +263,7 @@ function M:draw()
 
   self.sabotage_menu:draw()
   self.dilemma_dialog:draw()
+  if self.tutorial_overlay then self.tutorial_overlay:draw() end
 end
 
 function M:mousemoved(x, y)
@@ -262,6 +275,7 @@ function M:mousemoved(x, y)
     self.sabotage_menu:mousemoved(x, y)
     return
   end
+  if self.tutorial_overlay then self.tutorial_overlay:mousemoved(x, y) end
   self.kanban:mousemoved(x, y)
   for _, b in ipairs(self.action_buttons) do b:mousemoved(x, y) end
 end
@@ -275,10 +289,22 @@ function M:mousepressed(x, y, btn)
     self.sabotage_menu:mousepressed(x, y, btn)
     return
   end
+  if self.tutorial_overlay then
+    self.tutorial_overlay:mousepressed(x, y, btn)
+  end
   self.kanban:mousepressed(x, y, btn)
+  if self.tutorial and self.kanban.selected_id then
+    local t = self.kanban:get_selected()
+    if t and t.column == "backlog" then
+      self.tutorial.kanban_selected_in_backlog = true
+    end
+  end
   for _, b in ipairs(self.action_buttons) do
     local enabled = b._predicate == nil or b._predicate()
     if enabled then b:mousepressed(x, y, btn) end
+  end
+  if self.tutorial then
+    Tutorial.advance(self.tutorial, self.game_session)
   end
 end
 
@@ -291,6 +317,7 @@ function M:mousereleased(x, y, btn)
     self.sabotage_menu:mousereleased(x, y, btn)
     return
   end
+  if self.tutorial_overlay then self.tutorial_overlay:mousereleased(x, y, btn) end
   self.kanban:mousereleased(x, y, btn)
   for _, b in ipairs(self.action_buttons) do b:mousereleased(x, y, btn) end
 end
