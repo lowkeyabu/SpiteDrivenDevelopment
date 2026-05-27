@@ -35,19 +35,25 @@ function FSM:register(name, state)
 end
 
 function FSM:start(name)
+  assert(not self._transitioning, "FSM:start called during a transition")
   local state = self.states[name]
   assert(state, "no such state: " .. tostring(name))
+  self._transitioning = true
   self.current_name = name
   if state.enter then state:enter() end
+  self._transitioning = false
 end
 
 function FSM:transition(name)
+  assert(not self._transitioning, "FSM:transition called during a transition (nested)")
   local next_state = self.states[name]
   assert(next_state, "no such state: " .. tostring(name))
+  self._transitioning = true
   local prev = self.states[self.current_name]
   if prev and prev.leave then prev:leave() end
   self.current_name = name
   if next_state.enter then next_state:enter() end
+  self._transitioning = false
 end
 
 function FSM:current()

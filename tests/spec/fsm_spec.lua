@@ -63,4 +63,15 @@ describe("FSM", function()
     fsm:start("a")
     assert.has_error(function() fsm:transition("missing") end)
   end)
+
+  it("raises if a state's enter or leave calls transition on the same fsm", function()
+    local fsm = FSM.new()
+    fsm:register("a", {
+      enter = function(self)
+        fsm:transition("b")
+      end,
+    })
+    fsm:register("b", {})
+    assert.has_error(function() fsm:start("a") end)
+  end)
 end)
